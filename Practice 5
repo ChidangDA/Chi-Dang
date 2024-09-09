@@ -1,0 +1,45 @@
+--ex1
+select co.continent, floor(avg(c.population))
+from city as c join country as co
+ on c.countrycode = co.code
+ group by co.continent
+--ex2:
+SELECT round(cast(sum(case when signup_action = 'Confirmed' then 1 else 0 end) AS DECIMAL)/COUNT(*) , 2)
+FROM emails as e left join texts as t 
+on e.email_id = t.email_id
+WHERE t.signup_action IS NOT NULL
+--EX3:
+SELECT age_bucket,round(sum(case when activity_type = 'send' then time_spent else 0 end)*100.0/sum(time_spent),2) as send_perc
+, round(sum(case when activity_type = 'open' then time_spent else 0 end)*100.0/sum(time_spent), 2) as open_perc
+FROM activities as ac right join age_breakdown as ag ON
+ac.user_id = ag.user_id
+where activity_type in ('open','send')
+group by age_bucket
+--ex4:
+SELECT customer_id
+FROM customer_contracts as c inner join products as p
+on c.product_id = p.product_id
+group by customer_id
+having count(distinct product_category) > 2
+order by customer_id
+--ex5:
+select product_name, sum(unit) as unit
+from products as p right join orders as o on
+p.product_id = o.product_id
+where extract(year from order_date) = 2020 and extract(month from order_date ) =2 
+group by product_name 
+having sum(unit) > 99
+--ex6:
+select e1.employee_id, e1.name,  count(e2.employee_id) as reports_count,round(avg(e2.age)) as average_age
+from employees 
+as e1 left join employees as e2 on e1.employee_id = e2.reports_to
+where e2.reports_to is not null
+group by e1.employee_id, e1.name
+order by average_age desc
+
+--ex7:
+SELECT p.page_id
+FROM pages as p left join page_likes as pl ON
+p.page_id = pl.page_id
+where user_id is NULL
+order by page_id
