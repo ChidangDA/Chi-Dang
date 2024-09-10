@@ -43,3 +43,75 @@ FROM pages as p left join page_likes as pl ON
 p.page_id = pl.page_id
 where user_id is NULL
 order by page_id
+
+Midterm
+--ex1:
+select replacement_cost
+from film
+order by replacement_cost
+limit 1
+--ex2:
+select count(*)
+from film
+group by case when replacement_cost between 9.99 and 19.99 then 'low'
+when replacement_cost between 20.00 and 24.99 then 'medium'
+  when replacement_cost between 25.00 and 29.99 then 'high'
+  end
+--ex3:
+select title, length, c2.name
+from film as f left join film_category as c 
+on f.film_id = c.film_id
+left join category as c2 on c.category_id = c2.category_id
+where c2.name in ('Drama', 'Sports')
+order by length desc
+--ex4:
+select c2.name, count(*)
+from film as f left join film_category as c 
+on f.film_id = c.film_id
+left join category as c2 on c.category_id = c2.category_id
+group by c2.name
+order by count(*) desc
+--ex5:
+select concat(first_name,' ',last_name), count(film_id) as total_film
+from actor as a left join film_actor as f on 
+a.actor_id = f.actor_id
+group by concat(first_name,' ',last_name)
+order by total_film desc
+--ex6:
+select address
+from customer as c right join address as a
+on c.address_id = a.address_id
+where customer_id is null
+--ex7:
+select city, sum(amount) as revenue
+from payment as p left join customer as c
+on p.customer_id = c.customer_id
+left join address as a
+on c.address_id = a.address_id
+left join city as ci
+on ci.city_id = a.city_id
+group by city
+order by revenue desc
+--ex8:
+select concat(city,',',country) as city, sum(amount) as total_rev
+from  payment as p left join customer as c
+on p.customer_id = c.customer_id
+left join address as a
+on c.address_id = a.address_id
+left join city as ci
+on ci.city_id = a.city_id
+left join country as co
+on ci.country_id =co.country_id
+group by concat(city,',',country) 
+order by total_rev desc
+
+ 
+
+
+
+
+
+
+
+
+
