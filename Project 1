@@ -1,1 +1,72 @@
+--Step 1: Create Table
+
+-- Step 2: Change Data Type
+ALTER TABLE SALES_DATASET_RFM_PRJ ALTER COLUMN ordernumber TYPE integer USING (trim(ordernumber)::integer);
+ALTER TABLE SALES_DATASET_RFM_PRJ ALTER COLUMN quantityordered TYPE integer USING (trim(quantityordered)::integer);
+ALTER TABLE SALES_DATASET_RFM_PRJ ALTER COLUMN priceeach TYPE numeric USING (priceeach::numeric);
+ALTER TABLE SALES_DATASET_RFM_PRJ ALTER COLUMN sales TYPE numeric USING (sales::numeric)
+ALTER TABLE SALES_DATASET_RFM_PRJ ALTER COLUMN orderdate TYPE timestamp USING (orderdate::timestamp)
+ALTER TABLE SALES_DATASET_RFM_PRJ ALTER COLUMN status TYPE text USING (status::text)
+ALTER TABLE SALES_DATASET_RFM_PRJ ALTER COLUMN msrp TYPE integer USING (msrp::integer)
+ALTER TABLE SALES_DATASET_RFM_PRJ ALTER COLUMN customername TYPE text USING (customername::text)
+ALTER TABLE SALES_DATASET_RFM_PRJ ALTER COLUMN country TYPE text USING (country::text)
+ALTER TABLE SALES_DATASET_RFM_PRJ ALTER COLUMN dealsize TYPE text USING (country::text)
+-- Step 3: Extract Null
+--Step 4:
+alter table sales_dataset_rfm_prj
+add column Contact_first_name text
+
+update sales_dataset_rfm_prj
+set Contact_first_name = concat(Upper(left(contactfullname,1)), substring(contactfullname,2,position('-' in contactfullname) - 1))
+
+alter table sales_dataset_rfm_prj
+add column Contact_last_name text
+
+update sales_dataset_rfm_prj
+set contact_last_name = concat(upper(right(left(contactfullname,position('-' in contactfullname) + 1),1)),Substring(contactfullname,position('-' in contactfullname)+2, length(contactfullname)))
+--Step 5: 
+alter table sales_dataset_rfm_prj
+add column qtr_id  int
+
+update sales_dataset_rfm_prj
+set qtr_id = extract(quarter from orderdate)
+
+alter table sales_dataset_rfm_prj
+add column month_id int
+
+update sales_dataset_rfm_prj
+set month_id = extract(month from orderdate)
+
+
+alter table sales_dataset_rfm_prj
+add column year_id  int
+
+update sales_dataset_rfm_prj
+set year_id = extract(year from orderdate)
+--Step 6: Find the ouliers
+With tb1 as(
+select q1-1.5*IQR as min_value, q3+1.5*IQR as max_value
+from(
+select 
+percentile_cont(0.25) within group (order by quantityordered) as q1,
+percentile_cont(0.75) within group (order by quantityordered) as q3,
+percentile_cont(0.75) within group (order by quantityordered) - 
+percentile_cont(0.25) within group (order by quantityordered)
+as IQR
+from sales_dataset_rfm_prj ) as IQR
+)
+select *
+from sales_dataset_rfm_prj
+where quantityordered < (select min_value from tb1)
+or quantityordered > (select max_value from tb1)
+-- Step 7: Xử lí Outliers
+--S1:
+update sales_dataset_rfm_prj
+set quantityordered = (select avg(quantityordered) from sales_dataset_rfm_prj)
+where quantityordered < (select min_value from tb1)
+or quantityordered > (select max_value from tb1)
+--S2:
+DELETE FROM sales_dataset_rfm_prj
+WHERE quantityordered < (select min_value from tb1)
+or quantityordered > (select max_value from tb1)
 
